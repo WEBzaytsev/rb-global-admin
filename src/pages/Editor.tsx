@@ -1,50 +1,57 @@
 import LayoutPage from "../layout";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Button, Input } from '@arco-design/web-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { createReactEditorJS } from 'react-editor-js'
+import { Message } from '@arco-design/web-react';
 
 const ReactEditorJS = createReactEditorJS()
 
 const Editor = () => {
     const editorCore = useRef(null);
-    let {id} = useParams();
-    let [content, setContent] = useState();
-    let [loading, setLoading] = useState(true);
-    let cont = [
+    const {id} = useParams();
+    const [content, setContent] = useState();
+    const [loading, setLoading] = useState(id ? true : false);
+    const [title, setTitle] = useState("");
+    const navigate = useNavigate();
 
-    ]
-
+    const handleSetTitle = (e: any) => {
+        setTitle(e.target.value);
+    }
+    
     const handleInitialize = useCallback((instance: any) => {
         editorCore.current = instance
     }, [])
 
-    useLayoutEffect(() => {
-        const getPost = async () => {
-            await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
-                method: "GET",
-                headers: {
-                    "content-type": "application/json"
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                const {content} = data;
-                setContent(content);
-                setLoading(false);
-            });
-        }
-        getPost();
-    }, [])
+    if(id) {
+        useLayoutEffect(() => {
+            const getPost = async () => {
+                await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
+                    method: "GET",
+                    headers: {
+                        "content-type": "application/json"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const {content, title} = data;
+                    setContent(content);
+                    setTitle(title);
+                    setLoading(false);
+                });
+            }
+            getPost();
+        }, [])
+    }
 
     const handleSave = useCallback(async () => {
         const savedData = await editorCore?.current!.save();
 
-        const body = {
+        let body = {
+            title,
             "content": savedData
         }
 
-        await fetch('http://localhost:3000/api/v1/posts/', {
+        await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
             method: "POST",
             headers: {
                 "content-type": "application/json"
@@ -53,9 +60,48 @@ const Editor = () => {
         })
         .then(res => res.json())
         .then(data => {
+            Message.loading({
+                id: 'need_update',
+                content: 'Сохранение...',
+            });
+            setTimeout(() => {
+                Message.success({
+                    id: 'need_update',
+                    content: 'Успешно сохранено!',
+                });
+                navigate('/');
+            }, 1000);
             console.log(data);
         });
-    }, [])
+    }, [title])
+
+    const handleCreate = async () => {
+        const savedData = await editorCore?.current!.save();
+
+        let body = {
+            title,
+            "content": savedData
+        }
+
+        await fetch(`http://localhost:3000/api/v1/posts/`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        Message.loading({
+            id: 'need_update',
+            content: 'Создание...',
+        });
+        setTimeout(() => {
+            Message.success({
+                id: 'need_update',
+                content: 'Успешно!',
+            });
+            navigate('/');
+        }, 1000);
+    }
 
     if(loading) {
         return (
@@ -65,11 +111,13 @@ const Editor = () => {
         )
     }
 
-    console.log(JSON.stringify(content));
     return (
         <LayoutPage>
-            <ReactEditorJS defaultValue={content}  onInitialize={handleInitialize}/>
-            <button onClick={() => handleSave()}>Сохранить</button>
+            <div className="editor-page">
+                <input className="title-editor" onChange={(e) => handleSetTitle(e)} value={title} placeholder="Заголовок" />
+                <ReactEditorJS defaultValue={content}  onInitialize={handleInitialize} />
+                {(id === undefined) ? <button className="editor-save" onClick={() => handleCreate()}>Создать</button> : <button className="editor-save" onClick={() => handleSave()}>Сохранить</button>}
+            </div>
         </LayoutPage>
     )
 }

@@ -26,6 +26,10 @@ const router = createBrowserRouter([
     element: <SignUp />,
   },
   {
+    path: "/editor/",
+    element: <Editor />,
+  },
+  {
     path: "/editor/:id",
     element: <Editor />,
   },
