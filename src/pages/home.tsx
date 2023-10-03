@@ -31,6 +31,7 @@ const Home = () => {
         })
         .then(res => res.json())
         .then(data => {
+            console.log(data);
             setPosts(posts.filter((element: any) => element.postId !== postId))
         });
     }
@@ -42,7 +43,7 @@ const Home = () => {
         </>
     )
     
-    const render = (actions: any, item: any, index: any) => (
+    const render = (_actions: any, item: any, index: any) => (
         <List.Item className={index} key={index} actions={[actionRender(item)]}>
             <List.Item.Meta
                 title={item.title}
