@@ -3,11 +3,22 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useParams, useNavigate } from 'react-router-dom';
 import { createReactEditorJS } from 'react-editor-js'
 import { Message } from '@arco-design/web-react';
+import LinkTool from '@editorjs/link'
+import Header from '@editorjs/header'
+import { OutputData } from "@editorjs/editorjs";
 
 const ReactEditorJS = createReactEditorJS()
-
+interface EditorCore {
+    destroy(): Promise<void>
+  
+    clear(): Promise<void>
+  
+    save(): Promise<OutputData>
+  
+    render(data: OutputData): Promise<void>
+}
 const Editor = () => {
-    const editorCore = useRef(null);
+    const editorCore = useRef<EditorCore | null>(null);
     const {id} = useParams();
     const [content, setContent] = useState();
     const [loading, setLoading] = useState(id ? true : false);
@@ -103,6 +114,11 @@ const Editor = () => {
         }, 1000);
     }
 
+    const EDITOR_JS_TOOLS = {
+        linkTool: LinkTool,
+        header: Header,
+      }
+
     if(loading) {
         return (
             <LayoutPage>
@@ -115,7 +131,11 @@ const Editor = () => {
         <LayoutPage>
             <div className="editor-page">
                 <input className="title-editor" onChange={(e) => handleSetTitle(e)} value={title} placeholder="Заголовок" />
-                <ReactEditorJS defaultValue={content}  onInitialize={handleInitialize} />
+                <ReactEditorJS 
+                    tools={EDITOR_JS_TOOLS}
+                    defaultValue={content} 
+                    onInitialize={handleInitialize} 
+                />
                 {(id === undefined) ? <button className="editor-save" onClick={() => handleCreate()}>Создать</button> : <button className="editor-save" onClick={() => handleSave()}>Сохранить</button>}
             </div>
         </LayoutPage>
