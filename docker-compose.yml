@@ -1,18 +1,19 @@
 version: "3.9"
 
 services:
-  rb-global:
+  rb-global-admin:
+    container_name: rb-global-admin
+    working_dir: /usr/app
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: rb-global
-    restart: unless-stopped
     ports:
-      - 8000:8000
-    volumes:
-      - ./:/app
-    networks:
-      - caddy
-networks:
-  caddy:
-    external: true
+      - "8080:8080"
+    # "Host port(edit for port conflict):container port"
+    # networks:
+    #   - caddy
+# networks:
+#   caddy:
+#     external: true
+# Use only if you need to reassign the network
