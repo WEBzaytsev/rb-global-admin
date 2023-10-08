@@ -17,6 +17,11 @@ interface EditorCore {
   
     render(data: OutputData): Promise<void>
 }
+
+const host = import.meta.env.VITE_HOST;
+const protocol = import.meta.env.VITE_PROTOCOL;
+const path = 'api/v1/posts';
+
 const Editor = () => {
     const editorCore = useRef<EditorCore | null>(null);
     const {id} = useParams();
@@ -35,8 +40,9 @@ const Editor = () => {
 
     if(id) {
         useLayoutEffect(() => {
+            const url = `${host}:${protocol}/${path}/${id}`;
             const getPost = async () => {
-                await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
+                await fetch(url, {
                     method: "GET",
                     headers: {
                         "content-type": "application/json"
@@ -57,12 +63,14 @@ const Editor = () => {
     const handleSave = useCallback(async () => {
         const savedData = await editorCore?.current!.save();
 
+        const url = `${host}:${protocol}/${path}/${id}`;
+
         let body = {
             title,
             "content": savedData
         }
 
-        await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
+        await fetch(url, {
             method: "POST",
             headers: {
                 "content-type": "application/json"
@@ -89,12 +97,14 @@ const Editor = () => {
     const handleCreate = async () => {
         const savedData = await editorCore?.current!.save();
 
+        const url = `${host}:${protocol}/${path}`;
+
         let body = {
             title,
             "content": savedData
         }
 
-        await fetch(`http://localhost:3000/api/v1/posts/`, {
+        await fetch(url, {
             method: "POST",
             headers: {
                 "content-type": "application/json"
