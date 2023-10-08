@@ -3,6 +3,10 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { List } from '@arco-design/web-react';
 import { Link, useNavigate } from "react-router-dom";
 
+const host = import.meta.env.VITE_HOST;
+const protocol = import.meta.env.VITE_PROTOCOL;
+const path = 'api/v1/posts';
+
 const Home = () => {
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState([]);
@@ -10,7 +14,8 @@ const Home = () => {
 
     useEffect(() => {
         const getPost = async () => {
-            await fetch(`http://localhost:3000/api/v1/posts/`, {
+            const url = `${host}:${protocol}/${path}`;
+            await fetch(url, {
                 method: "GET",
                 headers: {
                     "content-type": "application/json"
@@ -26,7 +31,8 @@ const Home = () => {
     }, [])
     
     const deletePage = async (postId: number) => {
-        await fetch(`http://localhost:3000/api/v1/posts/${postId}`, {
+        const url = `${host}:${protocol}/${path}/${postId}`;
+        await fetch(url, {
             method: "DELETE"
         })
         .then(res => res.json())
