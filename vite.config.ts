@@ -15,7 +15,7 @@ export default ({ mode }) => {
     },
     server: {
       host: true,
-      port: 8000,
+      port: 8080,
       strictPort: true,
       // add the next lines if you're using windows and hot reload doesn't work
       watch: {
