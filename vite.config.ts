@@ -22,5 +22,8 @@ export default ({ mode }) => {
         usePolling: true,
       },
     },
+    preview: {
+      port: 8080,
+    },
   });
 };
