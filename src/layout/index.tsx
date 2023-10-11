@@ -7,8 +7,9 @@ const FooterLayout = Layout.Footer;
 const ContentLayout = Layout.Content;
 
 import { Layout } from '@arco-design/web-react';
+import {ReactNode} from "react";
 interface Props {
-    children: string | JSX.Element | JSX.Element[];
+    children: string | ReactNode | ReactNode[];
 }
 
 const LayoutPage = ({children}: Props) => {
