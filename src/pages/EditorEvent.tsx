@@ -7,9 +7,7 @@ import LayoutPage from "../layout";
 import {useCallback, useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {Message} from '@arco-design/web-react';
-
-type DateValuePiece = Date | null;
-type DateValue = DateValuePiece | [DateValuePiece, DateValuePiece];
+import {DateValue, RbEvent} from "../types/RbEvent.ts";
 
 const host = import.meta.env.VITE_HOST;
 const protocol = import.meta.env.VITE_PROTOCOL;
@@ -17,7 +15,7 @@ const path = 'api/v1/events';
 
 const EditorEvent = () => {
     const {id} = useParams();
-    const [loading, setLoading] = useState<boolean>(id ? true : false);
+    const [loading, setLoading] = useState<boolean>(!!id);
     const [number, setNumber] = useState<null | number>(null);
     const [date, setDate] = useState<DateValue>(new Date());
     const [place, setPlace] = useState<string>('');
@@ -25,19 +23,19 @@ const EditorEvent = () => {
     const [isShow, setIsShow] = useState<boolean>(true);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    useEffect((): void => {
         if (!id) return;
 
         const apiUrl = `${host}:${protocol}/${path}/${id}`;
-        const getEvent = async () => {
+        const getEvent = async (): Promise<void> => {
             await fetch(apiUrl, {
                 method: "GET",
                 headers: {
                     "content-type": "application/json"
                 }
             })
-                .then(res => res.json())
-                .then(data => {
+                .then((res: Response) => res.json())
+                .then((data: RbEvent): void => {
                     const {number, date, url, isShow, place} = data;
                     setNumber(number);
                     setDate(date);
@@ -50,7 +48,7 @@ const EditorEvent = () => {
         getEvent();
     }, []);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(async (): Promise<void> => {
         const apiUrl = `${host}:${protocol}/${path}/${id}`;
 
         let body = {
@@ -68,8 +66,8 @@ const EditorEvent = () => {
             },
             body: JSON.stringify(body)
         })
-            .then(res => res.json())
-            .then(() => {
+            .then((res: Response) => res.json())
+            .then((): void => {
                 Message.loading({
                     id: 'need_update',
                     content: 'Сохранение...',
@@ -84,7 +82,7 @@ const EditorEvent = () => {
             });
     }, [number, date, eventUrl, isShow, place]);
 
-    const handleCreate = async () => {
+    const handleCreate = async (): Promise<void> => {
         const apiUrl = `${host}:${protocol}/${path}`;
 
         let body = {
@@ -102,10 +100,12 @@ const EditorEvent = () => {
             },
             body: JSON.stringify(body)
         });
+
         Message.loading({
             id: 'need_update',
             content: 'Создание...',
         });
+
         setTimeout(() => {
             Message.success({
                 id: 'need_update',
