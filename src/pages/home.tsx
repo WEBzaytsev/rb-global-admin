@@ -1,8 +1,10 @@
 import LayoutPage from "../layout";
-import {useEffect, useState} from 'react';
+import {ReactNode, useEffect, useState} from 'react';
 import {List} from '@arco-design/web-react';
 import {Link, useNavigate} from "react-router-dom";
 import formatDateString from "../utils/formatDateString.ts";
+import {PageData} from "../types/PageData.ts";
+import {RbEvent} from "../types/RbEvent.ts";
 
 const host = import.meta.env.VITE_HOST;
 const protocol = import.meta.env.VITE_PROTOCOL;
@@ -10,11 +12,11 @@ const path = 'api/v1';
 
 const Home = () => {
     const [loading, setLoading] = useState(true);
-    const [posts, setPosts] = useState([]);
-    const [events, setEvents] = useState([]);
+    const [posts, setPosts] = useState<PageData[]>([]);
+    const [events, setEvents] = useState<RbEvent[]>([]);
     const navigate = useNavigate();
 
-    const getPosts = async (postType: string) => {
+    const getPosts = async (postType: string): Promise<void> => {
         const url = `${host}:${protocol}/${path}/${postType}`;
         await fetch(url, {
             method: "GET",
@@ -22,13 +24,16 @@ const Home = () => {
                 "content-type": "application/json"
             }
         })
-            .then(res => res.json())
-            .then(data => {
+            .then((res: Response) => res.json())
+            .then((data: RbEvent | PageData): void => {
+                // Todo: fix by using post types in DB
                 switch (postType) {
                     case 'posts':
+                        // @ts-ignore
                         setPosts(data);
                         break;
                     case 'events':
+                        // @ts-ignore
                         setEvents(data);
                         break;
                 }
@@ -36,90 +41,92 @@ const Home = () => {
             });
     }
 
-    useEffect(() => {
+    useEffect((): void => {
         getPosts('posts');
         getPosts('events');
     }, [])
 
-    const deletePage = async (postId: number) => {
+    const deletePage = async (postId: number): Promise<void> => {
         const url = `${host}:${protocol}/${path}/posts/${postId}`;
         await fetch(url, {
             method: "DELETE"
         })
-            .then(res => res.json())
-            .then(data => {
-                console.log(data);
-                setPosts(posts.filter((element: any) => element.postId !== postId))
-            });
+            .then((res: Response) => res.json())
+            .then((): void => setPosts(posts.filter((element: PageData) => element.postId !== postId)));
     }
 
-    const deleteEvent = async (id: number) => {
+    const deleteEvent = async (id: number): Promise<void> => {
         const url = `${host}:${protocol}/${path}/events/${id}`;
         await fetch(url, {
             method: "DELETE"
         })
-            .then(res => res.json())
-            .then(data => {
-                console.log(data);
-                setPosts(posts.filter((element: any) => element.postId !== id))
-            });
+            .then((res: Response) => res.json())
+            .then((): void => setEvents(events.filter((element: RbEvent) => element.id !== id)));
     }
 
-    const actionRender = (item: any) => (
+    const actionRenderPage = (pageData: PageData): ReactNode => (
         <>
-            {item.postId && (
-                <>
-                    <Link
-                        to={`/editor/${item.postId}`}
-                        className='list-demo-actions-button'
-                        style={{
-                            marginRight: 20,
-                            color: "#000",
-                            textDecoration: "none"
-                        }}
-                    >
-                        Редактировать
-                    </Link>
-                    <span onClick={() => deletePage(item.postId)} className='list-demo-actions-button'>Удалить</span>
-                </>
-            )}
-
-            {(item.id && !item.postId) && (
-                <>
-                    <Link
-                        to={`/editor-event/${item.id}`}
-                        className='list-demo-actions-button'
-                        style={{
-                            marginRight: 20,
-                            color: "#000",
-                            textDecoration: "none"
-                        }}
-                    >
-                        Редактировать
-                    </Link>
-                    <span onClick={() => deleteEvent(item.id)} className='list-demo-actions-button'>Удалить</span>
-                </>
-            )}
+            <Link
+                to={`/editor/${pageData.postId}`}
+                className='list-demo-actions-button'
+                style={{
+                    marginRight: 20,
+                    color: "#000",
+                    textDecoration: "none"
+                }}
+            >
+                Редактировать
+            </Link>
+            <span onClick={() => deletePage(pageData.postId)} className='list-demo-actions-button'>Удалить</span>
         </>
     )
 
-    const render = (_actions: any, item: any, index: any) => (
+    const actionRenderEvent = (eventData: RbEvent): ReactNode => (
+        <>
+            <Link
+                to={`/editor-event/${eventData.id}`}
+                className='list-demo-actions-button'
+                style={{
+                    marginRight: 20,
+                    color: "#000",
+                    textDecoration: "none"
+                }}
+            >
+                Редактировать
+            </Link>
+            <span onClick={() => deleteEvent(eventData.id)} className='list-demo-actions-button'>Удалить</span>
+        </>
+    );
+
+    const renderEvents = (_actions: [], item: RbEvent, index: number) => (
         <List.Item
-            className={index}
+            className={index.toString()}
             key={index}
-            actions={[actionRender(item)]}
+            actions={[actionRenderEvent(item)]}
         >
             <List.Item.Meta
-                title={item.title || `Встреча № ${item.number} (${item.place}) ${formatDateString(item.date)}`}
+                title={`Встреча № ${item.number} (${item.place}) ${formatDateString(item.date)}`}
             />
         </List.Item>
     );
 
-    const addPage = () => {
+    const renderPages = (_actions: [], item: PageData, index: number) => (
+        <List.Item
+            className={index.toString()}
+            key={index}
+            actions={[actionRenderPage(item)]}
+        >
+            <List.Item.Meta
+                title={item.title}
+            />
+        </List.Item>
+    );
+
+    const addPage = (): void => {
         navigate("/editor");
     }
 
-    const addEvent = () => {
+    const addEvent = (): void => {
         navigate("/editor-event");
     }
 
@@ -134,7 +141,7 @@ const Home = () => {
                         style={{width: 1000}}
                         dataSource={posts}
                         noDataElement={<div style={{textAlign: "center", padding: 40}}>Страниц не найдено:(</div>}
-                        render={render.bind(null, [])}
+                        render={renderPages.bind(null, [])}
                     />
                     <button onClick={addPage} style={{marginTop: 30}} className="editor-save">Создать страницу</button>
 
@@ -144,7 +151,7 @@ const Home = () => {
                         style={{width: 1000, marginTop: '50px'}}
                         dataSource={events}
                         noDataElement={<div style={{textAlign: "center", padding: 40}}>Встреч не найдено:(</div>}
-                        render={render.bind(null, [])}
+                        render={renderEvents.bind(null, [])}
                     />
                     <button onClick={addEvent} style={{marginTop: 30, marginBottom: '100px'}}
                             className="editor-save">Создать встречу

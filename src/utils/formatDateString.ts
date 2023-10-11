@@ -5,7 +5,7 @@ function formatDateString(inputDateString: string): string {
         throw new Error('Invalid date format');
     }
 
-    const options = {
+    const options: Intl.DateTimeFormatOptions = {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
