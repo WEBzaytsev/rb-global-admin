@@ -3,71 +3,53 @@ import {ReactNode, useEffect, useState} from 'react';
 import {List} from '@arco-design/web-react';
 import {Link, useNavigate} from "react-router-dom";
 import formatDateString from "../utils/formatDateString.ts";
-import {PageData} from "../types/PageData.ts";
 import {RbEvent} from "../types/RbEvent.ts";
-
-const host = import.meta.env.VITE_HOST;
-const protocol = import.meta.env.VITE_PROTOCOL;
-const path = 'api/v1';
+import {deleteEvent, deletePage, getEvents, getPages} from "../api/api.ts";
+import {Page} from "../types/Page.ts";
 
 const Home = () => {
-    const [loading, setLoading] = useState(true);
-    const [posts, setPosts] = useState<PageData[]>([]);
+    const [loadingPages, setLoadingPages] = useState(true);
+    const [loadingEvents, setLoadingEvents] = useState(true);
+    const [pages, setPages] = useState<Page[]>([]);
     const [events, setEvents] = useState<RbEvent[]>([]);
     const navigate = useNavigate();
 
-    const getPosts = async (postType: string): Promise<void> => {
-        const url = `${host}:${protocol}/${path}/${postType}`;
-        await fetch(url, {
-            method: "GET",
-            headers: {
-                "content-type": "application/json"
-            }
-        })
-            .then((res: Response) => res.json())
-            .then((data: RbEvent | PageData): void => {
-                // Todo: fix by using post types in DB
-                switch (postType) {
-                    case 'posts':
-                        // @ts-ignore
-                        setPosts(data);
-                        break;
-                    case 'events':
-                        // @ts-ignore
-                        setEvents(data);
-                        break;
-                }
-                setLoading(false);
-            });
-    }
-
     useEffect((): void => {
-        getPosts('posts');
-        getPosts('events');
-    }, [])
+        getPages()
+            .then((res: Page[]) => {
+                setPages(res);
+            })
+            // todo: handle error
+            .catch(() => {})
+            .finally(() => setLoadingPages(false));
 
-    const deletePage = async (postId: number): Promise<void> => {
-        const url = `${host}:${protocol}/${path}/posts/${postId}`;
-        await fetch(url, {
-            method: "DELETE"
-        })
-            .then((res: Response) => res.json())
-            .then((): void => setPosts(posts.filter((element: PageData) => element.postId !== postId)));
+        getEvents()
+            .then((res: RbEvent[]) => {
+                setEvents(res);
+            })
+            // todo: handle error
+            .catch(() => {})
+            .finally(() => setLoadingEvents(false));
+    }, []);
+
+    const removePage = async (pageId: number): Promise<void> => {
+        deletePage(pageId)
+            .then((): void => setPages(pages.filter((page: Page) => page.id !== pageId)))
+            // todo: handle error
+            .catch(() => {});
     }
 
-    const deleteEvent = async (id: number): Promise<void> => {
-        const url = `${host}:${protocol}/${path}/events/${id}`;
-        await fetch(url, {
-            method: "DELETE"
-        })
-            .then((res: Response) => res.json())
-            .then((): void => setEvents(events.filter((element: RbEvent) => element.id !== id)));
+    const removeEvent = async (eventId: number): Promise<void> => {
+        deleteEvent(eventId)
+            .then((): void => setEvents(events.filter((event: RbEvent) => event.id !== eventId)))
+            // todo: handle error
+            .catch(() => {});
     }
 
-    const actionRenderPage = (pageData: PageData): ReactNode => (
+    const actionRenderPage = (pageData: Page): ReactNode => (
         <>
             <Link
-                to={`/editor/${pageData.postId}`}
+                to={`/editor/${pageData.id}`}
                 className='list-demo-actions-button'
                 style={{
                     marginRight: 20,
@@ -77,7 +59,7 @@ const Home = () => {
             >
                 Редактировать
             </Link>
-            <span onClick={() => deletePage(pageData.postId)} className='list-demo-actions-button'>Удалить</span>
+            <span onClick={() => removePage(pageData.id)} className='list-demo-actions-button'>Удалить</span>
         </>
     )
 
@@ -94,7 +76,7 @@ const Home = () => {
             >
                 Редактировать
             </Link>
-            <span onClick={() => deleteEvent(eventData.id)} className='list-demo-actions-button'>Удалить</span>
+            <span onClick={() => removeEvent(eventData.id)} className='list-demo-actions-button'>Удалить</span>
         </>
     );
 
@@ -110,7 +92,7 @@ const Home = () => {
         </List.Item>
     );
 
-    const renderPages = (_actions: [], item: PageData, index: number) => (
+    const renderPages = (_actions: [], item: Page, index: number) => (
         <List.Item
             className={index.toString()}
             key={index}
@@ -132,32 +114,29 @@ const Home = () => {
 
     return (
         <LayoutPage>
-            {loading ?
-                <p>Загрузка...</p> :
-                <>
-                    <List
-                        header={<div>Страницы</div>}
-                        className='list-demo-actions'
-                        style={{width: 1000}}
-                        dataSource={posts}
-                        noDataElement={<div style={{textAlign: "center", padding: 40}}>Страниц не найдено:(</div>}
-                        render={renderPages.bind(null, [])}
-                    />
-                    <button onClick={addPage} style={{marginTop: 30}} className="editor-save">Создать страницу</button>
+            <List
+                header={<div>Страницы</div>}
+                className='list-demo-actions'
+                style={{width: 1000}}
+                dataSource={pages}
+                noDataElement={<div style={{textAlign: "center", padding: 40}}>Страниц не найдено:(</div>}
+                render={renderPages.bind(null, [])}
+            />
+            <button onClick={addPage} style={{marginTop: 30}} className="editor-save">Создать страницу</button>
 
-                    <List
-                        header={<div>Встречи</div>}
-                        className='list-demo-actions'
-                        style={{width: 1000, marginTop: '50px'}}
-                        dataSource={events}
-                        noDataElement={<div style={{textAlign: "center", padding: 40}}>Встреч не найдено:(</div>}
-                        render={renderEvents.bind(null, [])}
-                    />
-                    <button onClick={addEvent} style={{marginTop: 30, marginBottom: '100px'}}
-                            className="editor-save">Создать встречу
-                    </button>
-                </>
-            }
+            <List
+                header={<div>Встречи</div>}
+                className='list-demo-actions'
+                style={{width: 1000, marginTop: '50px'}}
+                dataSource={events}
+                noDataElement={<div style={{textAlign: "center", padding: 40}}>Встреч не найдено:(</div>}
+                render={renderEvents.bind(null, [])}
+            />
+            <button onClick={addEvent}
+                    style={{marginTop: 30, marginBottom: '100px'}}
+                    className="editor-save">
+                Создать встречу
+            </button>
         </LayoutPage>
     );
 }
