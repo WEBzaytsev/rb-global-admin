@@ -39,6 +39,8 @@ const EditorContentProvider = (props: Props): React.ReactElement => {
         try {
             const savePromises = editorContent.map( async (block) => {
                 if (block.blockType === BlockTypes.TEXT_CONTENT) {
+                    // todo: fix types
+                    // @ts-ignore
                     block.content = await block.editorRef?.current!.save();
                 }
             });
