@@ -87,6 +87,8 @@ const Home = () => {
             actions={[actionRenderEvent(item)]}
         >
             <List.Item.Meta
+                // todo: fix types
+                // @ts-ignore
                 title={`Встреча № ${item.number} (${item.place}) ${formatDateString(item.date)}`}
             />
         </List.Item>

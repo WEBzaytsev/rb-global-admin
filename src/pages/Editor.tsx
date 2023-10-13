@@ -32,6 +32,8 @@ const Editor = () => {
 
                 const formattedContent = content.map((block, idx: number) => {
                     if (block.blockType === BlockTypes.TEXT_CONTENT) {
+                        // todo: fix types
+                        // @ts-ignore
                         return {
                             id: idx,
                             editorRef: null,
@@ -53,6 +55,8 @@ const Editor = () => {
     }, []);
 
     const getContentData = async () => {
+        // todo: fix types
+        // @ts-ignore
         const dataTosSave = [];
 
         try {
@@ -66,9 +70,13 @@ const Editor = () => {
                     });
                 })
 
+                // todo: fix types
+                // @ts-ignore
                 return dataTosSave;
             }
         } catch (e) {
+            // todo: fix types
+            // @ts-ignore
             console.log(e.message);
         }
     }

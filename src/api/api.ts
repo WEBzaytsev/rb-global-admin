@@ -41,7 +41,8 @@ export const getPage = async (id: number): Promise<Page | null> => {
     }
 }
 
-export const createPage = async (data): Promise<boolean> => {
+// todo: fix types
+export const createPage = async (data: { title: any; content: any; }): Promise<boolean> => {
     const url = baseUrl + 'pages';
     const {title, content} = data;
 
@@ -63,7 +64,8 @@ export const createPage = async (data): Promise<boolean> => {
     }
 }
 
-export const savePage = async (id: number, data): Promise<boolean> => {
+// todo: fix types
+export const savePage = async (id: number, data: { title: any; content: any; }): Promise<boolean> => {
     const url = baseUrl + 'pages/' + id;
     const {title, content} = data;
 

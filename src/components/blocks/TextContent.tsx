@@ -24,6 +24,8 @@ const TextContent = (props: Props) => {
 
         if (isCurrentBlockRefSet()) return;
 
+        // todo: fix types
+        // @ts-ignore
         updateEditorContentItem({...block, editorRef: editorCore});
     }, []);
 
