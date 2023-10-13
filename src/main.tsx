@@ -1,9 +1,11 @@
 import "@arco-design/web-react/dist/css/arco.css";
+import React from 'react';
 import ReactDOM from 'react-dom/client'
 import './index.scss';
 import {
-  createBrowserRouter,
-  RouterProvider,
+    createBrowserRouter,
+    BrowserRouter,
+    RouterProvider,
 } from "react-router-dom";
 
 import SignIn from './pages/auth/SignIn.tsx';
@@ -11,8 +13,9 @@ import SignUp from './pages/auth/SignUp.tsx';
 import ErrorPage from './pages/Error.tsx';
 import Editor from './pages/Editor.tsx';
 import Home from './pages/home.tsx';
-import App from "./components/App.tsx";
+// import App from "./components/App.tsx";
 import EditorEvent from "./pages/EditorEvent.tsx";
+import EditorContentProvider from "./components/providers/EditorContentProvider.tsx";
 
 const router = createBrowserRouter([
     {
@@ -48,7 +51,18 @@ const router = createBrowserRouter([
         element: <ErrorPage/>
     }
 ]);
+//
+// const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+// root.render(
+//     <React.StrictMode>
+//         <BrowserRouter>
+//             <App/>
+//         </BrowserRouter>
+//     </React.StrictMode>
+// )
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <RouterProvider router={router} />
+    <EditorContentProvider>
+        <RouterProvider router={router} />
+    </EditorContentProvider>
 )
