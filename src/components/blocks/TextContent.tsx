@@ -5,14 +5,13 @@ import Header from "@editorjs/header";
 import {EditorCore, TextContent as TextContentType} from "../../types/blocks/TextContent.ts";
 import {useEditorContentContext} from "../providers/EditorContentProvider.tsx";
 
-const ReactEditorJS = createReactEditorJS();
-
 interface Props {
     block: TextContentType;
 }
 
 const TextContent = (props: Props) => {
     const {block} = props;
+    const ReactEditorJS = createReactEditorJS();
     const {editorContent, updateEditorContentItem} = useEditorContentContext();
     const editorCore = useRef<EditorCore | null>(null);
 
