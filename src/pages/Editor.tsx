@@ -1,32 +1,17 @@
+import React, {useCallback, useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {Message} from '@arco-design/web-react';
 import LayoutPage from "../layout";
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { createReactEditorJS } from 'react-editor-js'
-import { Message } from '@arco-design/web-react';
-import LinkTool from '@editorjs/link'
-import Header from '@editorjs/header'
-import { OutputData } from "@editorjs/editorjs";
-import {PageData} from "../types/PageData.ts";
-
-const ReactEditorJS = createReactEditorJS()
-interface EditorCore {
-    destroy(): Promise<void>
-  
-    clear(): Promise<void>
-  
-    save(): Promise<OutputData>
-  
-    render(data: OutputData): Promise<void>
-}
-
-const host = import.meta.env.VITE_HOST;
-const protocol = import.meta.env.VITE_PROTOCOL;
-const path = 'api/v1/posts';
+import PageContent from "../components/PageContent.tsx";
+import {createPage, getPage, savePage} from "../api/api.ts";
+import {useEditorContentContext} from "../components/providers/EditorContentProvider.tsx";
+import {Page} from "../types/Page.ts";
+import {BlockTypes} from "../types/BlockTypes.ts";
+import {TextContent} from "../types/blocks/TextContent.ts";
 
 const Editor = () => {
-    const editorCore = useRef<EditorCore | null>(null);
     const {id} = useParams();
-    const [content, setContent] = useState<OutputData | undefined>(undefined);
+    const {editorContent, setEditorContent, saveEditorContent} = useEditorContentContext();
     const [loading, setLoading] = useState<boolean>(!!id);
     const [title, setTitle] = useState("");
     const navigate = useNavigate();
@@ -34,50 +19,72 @@ const Editor = () => {
     const handleSetTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
         setTitle(e.target.value);
     }
-    
-    const handleInitialize = useCallback((instance: EditorCore | null): void => {
-        editorCore.current = instance
-    }, [])
 
-    useLayoutEffect((): void => {
+    useEffect((): void => {
         if (!id) return;
 
-        const url = `${host}:${protocol}/${path}/${id}`;
-        const getPost = async (): Promise<void> => {
-            await fetch(url, {
-                method: "GET",
-                headers: {
-                    "content-type": "application/json"
-                }
+        getPage(Number(id))
+            .then((data: Page | null) => {
+                if (!data) throw Error;
+
+                const {content, title} = data;
+                setTitle(title);
+
+                const formattedContent = content.map((block, idx: number) => {
+                    if (block.blockType === BlockTypes.TEXT_CONTENT) {
+                        return {
+                            id: idx,
+                            editorRef: null,
+                            content: block.html,
+                            html: block.html,
+                            blockType: block.blockType,
+                        } as TextContent;
+                    }
+
+                    return block;
+                })
+
+                if (formattedContent) setEditorContent(formattedContent);
             })
-                .then((res: Response) => res.json())
-                .then((data: PageData): void => {
-                    const {content, title} = data;
-                    setContent(content);
-                    setTitle(title);
-                    setLoading(false);
-                });
-        }
-        getPost();
+            // todo: handle error
+            .catch(() => {
+            })
+            .finally((): void => setLoading(false))
     }, []);
 
-    const handleSave = useCallback(async (): Promise<void> => {
-        const savedData = await editorCore?.current!.save();
-        const url = `${host}:${protocol}/${path}/${id}`;
+    const getContentData = async () => {
+        const dataTosSave = [];
 
-        let body = {
+        try {
+            const isEditorsSaved = await saveEditorContent();
+
+            if (isEditorsSaved) {
+                editorContent.forEach((block) => {
+                    dataTosSave.push({
+                        html: block.content,
+                        blockType: block.blockType,
+                    });
+                })
+
+                return dataTosSave;
+            }
+        } catch (e) {
+            console.log(e.message);
+        }
+    }
+
+    const handleSave = useCallback(async (): Promise<void> => {
+        const savedData = await getContentData();
+        console.log(savedData)
+
+        if (!savedData) return;
+
+        const data = {
             title,
             content: savedData
         }
 
-        await fetch(url, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json"
-            },
-            body: JSON.stringify(body)
-        })
-            .then((res: Response) => res.json())
+        savePage(Number(id), data)
             .then((): void => {
                 Message.loading({
                     id: 'need_update',
@@ -90,29 +97,26 @@ const Editor = () => {
                     });
                     navigate('/');
                 }, 1000);
-        });
-    }, [title])
+            });
+    }, [title, editorContent])
 
     const handleCreate = async (): Promise<void> => {
-        const savedData = await editorCore?.current!.save();
-        const url = `${host}:${protocol}/${path}`;
+        const savedData = await getContentData();
 
-        let body = {
+        if (!savedData) return;
+
+        const data = {
             title,
             content: savedData
         }
 
-        await fetch(url, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json"
-            },
-            body: JSON.stringify(body)
-        });
+        await createPage(data);
+
         Message.loading({
             id: 'need_update',
             content: 'Создание...',
         });
+
         setTimeout(() => {
             Message.success({
                 id: 'need_update',
@@ -122,39 +126,28 @@ const Editor = () => {
         }, 1000);
     }
 
-    const EDITOR_JS_TOOLS = {
-        linkTool: LinkTool,
-        header: Header,
-    }
-
-    if(loading) {
-        return (
-            <LayoutPage>
-                Загрузка...
-            </LayoutPage>
-        )
-    }
-
     return (
         <LayoutPage>
-            <div className="editor-page">
-                <input
-                    className="title-editor"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSetTitle(e)}
-                    value={title}
-                    placeholder="Заголовок"
-                />
-                <ReactEditorJS 
-                    tools={EDITOR_JS_TOOLS}
-                    defaultValue={content} 
-                    onInitialize={handleInitialize} 
-                />
-                {
-                    id === undefined ?
-                        <button className="editor-save" onClick={handleCreate}>Создать</button> :
-                        <button className="editor-save" onClick={handleSave}>Сохранить</button>
-                }
-            </div>
+            {
+                loading ?
+                    <p>Загрузка...</p> :
+                    <div className="editor-page">
+                        <input
+                            className="title-editor"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSetTitle(e)}
+                            value={title}
+                            placeholder="Заголовок"
+                        />
+
+                        <PageContent/>
+
+                        {
+                            id === undefined ?
+                                <button className="editor-save" onClick={handleCreate}>Создать</button> :
+                                <button className="editor-save" onClick={handleSave}>Сохранить</button>
+                        }
+                    </div>
+            }
         </LayoutPage>
     )
 }
