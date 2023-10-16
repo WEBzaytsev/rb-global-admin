@@ -86,11 +86,11 @@ const Home = () => {
             key={index}
             actions={[actionRenderEvent(item)]}
         >
-            <List.Item.Meta
-                // todo: fix types
-                // @ts-ignore
-                title={`Встреча № ${item.number} (${item.place}) ${formatDateString(item.date)}`}
-            />
+            {item.date && (
+                <List.Item.Meta
+                    title={`Встреча № ${item.number} (${item.place}) ${formatDateString(item.date.toString())}`}
+                />
+            )}
         </List.Item>
     );
 
