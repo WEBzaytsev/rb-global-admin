@@ -1,5 +1,6 @@
 import {Page} from "../types/Page.ts";
 import {RbEvent} from "../types/RbEvent.ts";
+import {DBTextContentBlock} from "../types/blocks/TextContent.ts";
 
 const protocol = import.meta.env.VITE_API_PROTOCOL;
 const hostname = import.meta.env.VITE_API_HOSTNAME;
@@ -41,10 +42,8 @@ export const getPage = async (id: number): Promise<Page | null> => {
     }
 }
 
-// todo: fix types
-export const createPage = async (data: { title: any; content: any; }): Promise<boolean> => {
+export const createPage = async (title: string, content: (DBTextContentBlock)[]): Promise<boolean> => {
     const url = baseUrl + 'pages';
-    const {title, content} = data;
 
     const body = {title, content};
 
@@ -64,10 +63,8 @@ export const createPage = async (data: { title: any; content: any; }): Promise<b
     }
 }
 
-// todo: fix types
-export const savePage = async (id: number, data: { title: any; content: any; }): Promise<boolean> => {
+export const savePage = async (id: number, title: string, content: (DBTextContentBlock)[]): Promise<boolean> => {
     const url = baseUrl + 'pages/' + id;
-    const {title, content} = data;
 
     const body = {title, content};
 
