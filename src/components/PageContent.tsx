@@ -1,12 +1,12 @@
 import {ReactNode, useEffect, useRef, useState} from "react";
 import SelectBlockList from "./SelectBlockList.tsx";
-import {TextContent as TextContentType} from "../types/blocks/TextContent.ts";
+import {ClientTextContentBlock} from "../types/blocks/TextContent.ts";
 import {BlockTypes} from "../types/BlockTypes.ts";
 import TextContent from "./blocks/TextContent.tsx";
 import {useEditorContentContext} from "./providers/EditorContentProvider.tsx";
 
-const blockComponents = new Map<BlockTypes, (block: TextContentType) => ReactNode>([
-    [BlockTypes.TEXT_CONTENT, (block: TextContentType) => (<TextContent block={block} />)]
+const blockComponents = new Map<BlockTypes, (block: ClientTextContentBlock) => ReactNode>([
+    [BlockTypes.TEXT_CONTENT, (block: ClientTextContentBlock) => (<TextContent block={block} />)]
 ])
 
 const PageContent = () => {
@@ -39,7 +39,7 @@ const PageContent = () => {
         setIsBlocksListShow(true);
     }
 
-    const renderBlock = (block: TextContentType) => {
+    const renderBlock = (block: ClientTextContentBlock) => {
         const component = blockComponents.get(block.blockType);
 
         return (
@@ -51,7 +51,7 @@ const PageContent = () => {
 
     return (
         <>
-            {editorContent.map((block: TextContentType, idx: number) => (
+            {editorContent.map((block: ClientTextContentBlock, idx: number) => (
                 <div key={idx}>
                     {renderBlock(block)}
                 </div>
