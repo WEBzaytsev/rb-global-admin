@@ -7,25 +7,16 @@ interface Props {
 
 const blocks = Object.values(BlockTypes).map((item) => ({
     type: item,
+    // todo: add icons
     icon: ''
 }));
 
 const SelectBlockList = (props: Props) => {
     const {hideBlocksList} = props;
-    const {editorContent, addEditorContentItem} = useEditorContentContext();
+    const {addEditorContentItem} = useEditorContentContext();
 
     const select = (type: BlockTypes): void => {
-        switch (type) {
-            case BlockTypes.TEXT_CONTENT:
-                addEditorContentItem({
-                    id: editorContent.length + 1,
-                    blockType: type,
-                    html: undefined,
-                    editorRef: null,
-                });
-                break;
-        }
-
+        addEditorContentItem(type);
         hideBlocksList();
     }
 

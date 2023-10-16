@@ -41,7 +41,7 @@ const Editor = () => {
                                 editorRef: null,
                                 html: block.html,
                                 blockType: block.blockType,
-                            } as ClientTextContentBlock;
+                            };
                         }
                     }
                 ).filter(Boolean) as ClientTextContentBlock[];

@@ -1,42 +1,49 @@
-import React, {useCallback, useRef} from "react";
-import {createReactEditorJS} from "react-editor-js";
-import LinkTool from "@editorjs/link";
-import Header from "@editorjs/header";
-import {EditorCore, ClientTextContentBlock as TextContentType} from "../../types/blocks/TextContent.ts";
+import React, {useRef, useState} from "react";
+import {ClientTextContentBlock} from "../../types/blocks/TextContent.ts";
 import {useEditorContentContext} from "../providers/EditorContentProvider.tsx";
+import {Editor} from '@tinymce/tinymce-react';
 
 interface Props {
-    block: TextContentType;
+    block: ClientTextContentBlock;
 }
 
 const TextContent = (props: Props) => {
     const {block} = props;
-    const ReactEditorJS = createReactEditorJS();
-    const {editorContent, updateEditorContentItem} = useEditorContentContext();
-    const editorCore = useRef<EditorCore | null>(null);
+    const {updateEditorContentItem} = useEditorContentContext();
+    const [isEditor, setIsEditor] = useState(false);
+    const [value, setValue] = useState(block.html);
 
-    const isCurrentBlockRefSet = (): boolean =>
-        Boolean(editorContent.find((item) => item.id === block.id)?.editorRef);
+    const editorRef = useRef(null);
 
-    const handleInitialize = useCallback((instance: EditorCore | null): void => {
-        editorCore.current = instance;
+    // todo: fix types
+    // @ts-ignore
+    const handleInitialize = (evt, editor): void => {
+        editorRef.current = editor;
+        updateEditorContentItem({...block, editorRef: editorRef.current});
+    };
 
-        if (isCurrentBlockRefSet()) return;
-
-        updateEditorContentItem({...block, editorRef: editorCore});
-    }, []);
-
-    const EDITOR_JS_TOOLS = {
-        linkTool: LinkTool,
-        header: Header,
-    }
+    // const showEditor = () => setIsEditor(true);
+    const hideEditor = () => setIsEditor(false);
 
     return (
-        <ReactEditorJS
-            tools={EDITOR_JS_TOOLS}
-            defaultValue={block.html}
-            onInitialize={handleInitialize}
-        />
+        <>
+            {/*{isEditor || value.trim() === '' ? (*/}
+            <Editor
+                apiKey="cb4hlcyhyugrpps31s1942gf87i4875wjdmfkon2ux16ndou"
+                onInit={handleInitialize}
+                onBlur={hideEditor}
+                onEditorChange={(newValue) => setValue(newValue)}
+                value={value}
+                init={{
+                    height: 300,
+                    menubar: true,
+                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                }}
+            />
+            {/*) : (*/}
+            {/*    <div onClick={showEditor} dangerouslySetInnerHTML={{__html: value}} />*/}
+            {/*)}*/}
+        </>
     )
 }
 

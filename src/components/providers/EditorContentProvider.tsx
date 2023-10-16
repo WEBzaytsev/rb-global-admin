@@ -1,8 +1,7 @@
 import React, {createContext, useContext, useState} from "react";
 /** types */
 import {BlockTypes} from "../../types/BlockTypes.ts";
-import {ClientTextContentBlock, EditorCore} from "../../types/blocks/TextContent.ts";
-import {OutputData} from "@editorjs/editorjs";
+import {ClientTextContentBlock} from "../../types/blocks/TextContent.ts";
 
 interface Props {
     children: React.ReactElement;
@@ -11,13 +10,8 @@ interface Props {
 interface EditorContentProviderValue {
     editorContent: (ClientTextContentBlock)[];
     setEditorContent: React.Dispatch<React.SetStateAction<ClientTextContentBlock[]>>;
-    addEditorContentItem: (item: ClientTextContentBlock) => void;
-    updateEditorContentItem: (item: {
-        editorRef: React.MutableRefObject<EditorCore | null>;
-        blockType: BlockTypes.TEXT_CONTENT;
-        html: OutputData | undefined;
-        id: number
-    }) => void;
+    addEditorContentItem: (item: BlockTypes) => void;
+    updateEditorContentItem: (item: ClientTextContentBlock) => void;
     saveEditorContent: () => Promise<boolean>;
     removeEditorContentItem: (item: ClientTextContentBlock) => number;
 }
@@ -28,12 +22,30 @@ const EditorContentProvider = (props: Props): React.ReactElement => {
     const {children} = props;
     const [editorContent, setEditorContent] = useState<(ClientTextContentBlock)[]>([]);
 
-    const addEditorContentItem = (item: ClientTextContentBlock): void => {
-        const updatedContent = [...editorContent, item];
-        setEditorContent(updatedContent);
+    const addEditorContentItem = (blockType: BlockTypes): void => {
+        let newBlock: ClientTextContentBlock;
+
+        switch (blockType) {
+            case BlockTypes.TEXT_CONTENT:
+                newBlock = {
+                    id: editorContent.length + 1,
+                    blockType: blockType,
+                    html: '',
+                    editorRef: null,
+                };
+
+                const updatedContent = [...editorContent, newBlock];
+                setEditorContent(updatedContent);
+                console.log(updatedContent)
+                break;
+        }
+
+        // if (newBlock.id) {
+        //
+        // }
     }
 
-    const updateEditorContentItem = (item: ClientTextContentBlock) => {
+    const updateEditorContentItem = (item: ClientTextContentBlock): void => {
         setEditorContent((prevContent: (ClientTextContentBlock)[]) =>
             prevContent.map((el: ClientTextContentBlock) =>
                 el.id === item.id ? item : el
@@ -45,7 +57,9 @@ const EditorContentProvider = (props: Props): React.ReactElement => {
         try {
             const savePromises = editorContent.map( async (block) => {
                 if (block.blockType === BlockTypes.TEXT_CONTENT) {
-                    block.html = await block.editorRef?.current!.save();
+                    // todo: fix types
+                    // @ts-ignore
+                    block.html = await block.editorRef?.getContent();
                 }
             });
 
