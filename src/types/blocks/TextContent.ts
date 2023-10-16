@@ -8,10 +8,14 @@ export interface EditorCore {
     render(data: OutputData): Promise<void>
 }
 
-export interface TextContent {
+export interface DBTextContentBlock {
     id: number;
-    html: EditorCore | null;
+    html: OutputData | undefined;
     blockType: BlockTypes.TEXT_CONTENT;
-    editorRef: EditorCore | null;
-    content: OutputData | undefined;
+}
+
+export interface ClientTextContentBlock extends DBTextContentBlock {
+    editorRef: {
+        current: EditorCore | null
+    } | null;
 }
