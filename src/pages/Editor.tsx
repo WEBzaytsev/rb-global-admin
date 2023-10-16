@@ -21,7 +21,10 @@ const Editor = () => {
     }
 
     useEffect((): void => {
-        if (!id) return;
+        if (!id) {
+            setEditorContent([]);
+            return;
+        }
 
         getPage(Number(id))
             .then((data: Page | null) => {
