@@ -7,7 +7,7 @@ import {createPage, getPage, savePage} from "../api/api.ts";
 import {useEditorContentContext} from "../components/providers/EditorContentProvider.tsx";
 import {Page} from "../types/Page.ts";
 import {BlockTypes} from "../types/BlockTypes.ts";
-import {TextContent} from "../types/blocks/TextContent.ts";
+import {ClientTextContentBlock, DBTextContentBlock} from "../types/blocks/TextContent.ts";
 
 const Editor = () => {
     const {id} = useParams();
@@ -30,21 +30,18 @@ const Editor = () => {
                 const {content, title} = data;
                 setTitle(title);
 
-                const formattedContent = content.map((block, idx: number) => {
-                    if (block.blockType === BlockTypes.TEXT_CONTENT) {
-                        // todo: fix types
-                        // @ts-ignore
-                        return {
-                            id: idx,
-                            editorRef: null,
-                            content: block.html,
-                            html: block.html,
-                            blockType: block.blockType,
-                        } as TextContent;
+                const formattedContent = content.map(
+                    (block: DBTextContentBlock, idx: number): ClientTextContentBlock | undefined => {
+                        if (block.blockType === BlockTypes.TEXT_CONTENT) {
+                            return {
+                                id: idx,
+                                editorRef: null,
+                                html: block.html,
+                                blockType: block.blockType,
+                            } as ClientTextContentBlock;
+                        }
                     }
-
-                    return block;
-                })
+                ).filter(Boolean) as ClientTextContentBlock[];
 
                 if (formattedContent) setEditorContent(formattedContent);
             })
@@ -54,45 +51,36 @@ const Editor = () => {
             .finally((): void => setLoading(false))
     }, []);
 
-    const getContentData = async () => {
-        // todo: fix types
-        // @ts-ignore
-        const dataTosSave = [];
+    const getContentData = async (): Promise<(DBTextContentBlock)[]> => {
+        const dataTosSave: (DBTextContentBlock)[] = [];
 
         try {
             const isEditorsSaved = await saveEditorContent();
 
             if (isEditorsSaved) {
-                editorContent.forEach((block) => {
+                editorContent.forEach((block: DBTextContentBlock, idx: number): void => {
                     dataTosSave.push({
-                        html: block.content,
+                        id: idx,
+                        html: block.html,
                         blockType: block.blockType,
                     });
                 })
 
-                // todo: fix types
-                // @ts-ignore
                 return dataTosSave;
             }
+
+            throw new Error();
         } catch (e) {
-            // todo: fix types
-            // @ts-ignore
-            console.log(e.message);
+            return [];
         }
     }
 
     const handleSave = useCallback(async (): Promise<void> => {
         const savedData = await getContentData();
-        console.log(savedData)
 
         if (!savedData) return;
 
-        const data = {
-            title,
-            content: savedData
-        }
-
-        savePage(Number(id), data)
+        savePage(Number(id), title, savedData)
             .then((): void => {
                 Message.loading({
                     id: 'need_update',
@@ -113,12 +101,7 @@ const Editor = () => {
 
         if (!savedData) return;
 
-        const data = {
-            title,
-            content: savedData
-        }
-
-        await createPage(data);
+        await createPage(title, savedData);
 
         Message.loading({
             id: 'need_update',

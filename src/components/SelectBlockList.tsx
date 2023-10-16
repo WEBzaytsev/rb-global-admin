@@ -1,5 +1,4 @@
 import {BlockTypes} from "../types/BlockTypes.ts";
-import {TextContent} from "../types/blocks/TextContent.ts";
 import {useEditorContentContext} from "./providers/EditorContentProvider.tsx";
 
 interface Props {
@@ -21,9 +20,8 @@ const SelectBlockList = (props: Props) => {
                 addEditorContentItem({
                     id: editorContent.length + 1,
                     blockType: type,
-                    html: null,
+                    html: undefined,
                     editorRef: null,
-                    content: undefined,
                 });
                 break;
         }
