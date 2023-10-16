@@ -2,7 +2,7 @@ import React, {useCallback, useRef} from "react";
 import {createReactEditorJS} from "react-editor-js";
 import LinkTool from "@editorjs/link";
 import Header from "@editorjs/header";
-import {EditorCore, TextContent as TextContentType} from "../../types/blocks/TextContent.ts";
+import {EditorCore, ClientTextContentBlock as TextContentType} from "../../types/blocks/TextContent.ts";
 import {useEditorContentContext} from "../providers/EditorContentProvider.tsx";
 
 interface Props {
@@ -23,8 +23,6 @@ const TextContent = (props: Props) => {
 
         if (isCurrentBlockRefSet()) return;
 
-        // todo: fix types
-        // @ts-ignore
         updateEditorContentItem({...block, editorRef: editorCore});
     }, []);
 
@@ -36,7 +34,7 @@ const TextContent = (props: Props) => {
     return (
         <ReactEditorJS
             tools={EDITOR_JS_TOOLS}
-            defaultValue={block.content}
+            defaultValue={block.html}
             onInitialize={handleInitialize}
         />
     )
