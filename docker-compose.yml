@@ -8,6 +8,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
+    image: rb-global-admin:latest
     ports:
       - "8080:8080"
     env_file:
