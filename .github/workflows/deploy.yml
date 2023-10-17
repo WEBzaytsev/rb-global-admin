@@ -1,0 +1,36 @@
+on: [push]
+
+jobs:
+  mirror_with_sftp:
+    name: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: FTP Deployer
+        uses: sand4rt/ftp-deployer@v1.7
+        with:
+          sftp: true
+          host: ${{ secrets.SERVER_HOST }}
+          port: 2110
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          remote_folder: ${{ secrets.SERVER_PATH }}
+          local_folder: "."
+          cleanup: true
+          include: '[ "*", "**/*" ]'
+          # exclude: '["node_modules/**", "_secret.php", ".github/**", ".git/**", "*.env","wordpress/**/*","caddy_config/**","caddy_data/**"]'
+
+      - name: Ssh deploy
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 2110
+          envs: SERVER_PATH
+          script: |
+            cd $SERVER_PATH
+            docker compose down && docker compose up -d --build
