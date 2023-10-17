@@ -25,7 +25,7 @@ jobs:
             .env.example
             docker-compose.yml
           delete: true
-      - name: Up container
+      - name: Re-create the container
         uses: appleboy/ssh-action@v1.0.0
         env:
           SERVER_PATH: ${{ secrets.SERVER_PATH }}
