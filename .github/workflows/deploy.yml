@@ -18,7 +18,7 @@ jobs:
           remote_folder: ${{ secrets.SERVER_PATH }}
           local_folder: "."
           cleanup: true
-          exclude: '[".env.example", "docker-compose.yml"]'
+          exclude: '[".env.example", "docker-compose.yml", ".git", ".github"]'
 
       - name: Ssh deploy
         uses: appleboy/ssh-action@v1.0.0
@@ -34,6 +34,6 @@ jobs:
           envs: SERVER_PATH,ENV_INIT,COMPOSE_INIT
           script: |
             cd $SERVER_PATH
-            cat > .env << $ENV_INIT
-            cat > docker-compose.yml << $COMPOSE_INIT
+            cat > .env << EOF $ENV_INIT EOF
+            cat > docker-compose.yml << EOF $COMPOSE_INIT EOF
             docker compose down && docker compose up -d --build
