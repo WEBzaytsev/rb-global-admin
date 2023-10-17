@@ -1,5 +1,5 @@
 on: [push]
-
+name: FTP Deployer and up docker
 jobs:
   mirror_with_sftp:
     name: deploy
