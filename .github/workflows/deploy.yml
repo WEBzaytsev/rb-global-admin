@@ -16,21 +16,25 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           remote_folder: ${{ secrets.SERVER_PATH }}
-          local_folder: "."
+          # local_folder: "."
           cleanup: true
           include: '[ "*", "**/*" ]'
-          # exclude: '["node_modules/**", "_secret.php", ".github/**", ".git/**", "*.env","wordpress/**/*","caddy_config/**","caddy_data/**"]'
+          exclude: '[".env.example", "docker-compose.yml"]'
 
       - name: Ssh deploy
         uses: appleboy/ssh-action@v1.0.0
         env:
           SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          ENV_INIT: ${{ secrets.ENV_INIT }}
+          COMPOSE_INIT: ${{ secrets.COMPOSE_INIT }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 2110
-          envs: SERVER_PATH
+          envs: SERVER_PATH,ENV_INIT,COMPOSE_INIT
           script: |
             cd $SERVER_PATH
+            cat > .env << $ENV_INIT
+            cat > docker-compose.yml << $COMPOSE_INIT
             docker compose down && docker compose up -d --build
