@@ -7,9 +7,11 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+     - ./.env
     # "Host port(edit for port conflict):container port"
     # networks:
     #   - caddy
